@@ -1,17 +1,17 @@
 <section class="card form-card">
   <h2>Thêm sách mới</h2>
-  <p class="subtitle">Tiền tố mã sản phẩm bắt buộc: <strong>110</strong> (3 số cuối MSSV)</p>
+  <p class="subtitle">Tiền tố mã sản phẩm bắt buộc: <strong>110</strong> (3 số cuối MSSV 23IT110)</p>
   
   <form action="/books/add" method="POST" class="book-form">
     <div class="form-grid">
       <div class="form-group">
-        <label for="productCode">Mã sản phẩm</label>
-        <input type="text" id="productCode" name="productCode" placeholder="Ví dụ: 11001" required>
+        <label for="productCode">Mã sản phẩm (Bắt đầu bằng 110)</label>
+        <input type="text" id="productCode" name="productCode" placeholder="Ví dụ: 110001" required>
       </div>
 
       <div class="form-group">
-        <label for="name">Tên sách</label>
-        <input type="text" id="name" name="name" placeholder="Tên cuốn sách" required>
+        <label for="title">Tên sách</label>
+        <input type="text" id="title" name="title" placeholder="Tên cuốn sách" required>
       </div>
 
       <div class="form-group">
@@ -21,7 +21,7 @@
 
       <div class="form-group">
         <label for="price">Giá sách (VNĐ)</label>
-        <input type="number" id="price" name="price" placeholder="Giá gốc" min="0" required>
+        <input type="number" id="price" name="price" placeholder="Giá gốc" min="1" required>
       </div>
     </div>
 
@@ -41,7 +41,8 @@
           <th>Tên sách</th>
           <th>Tác giả</th>
           <th>Giá gốc</th>
-          <th>Giá sau thuế (VAT {{vatRate}}%)</th>
+          <th>VAT</th>
+          <th>Giá sau thuế</th>
         </tr>
       </thead>
       <tbody>
@@ -49,15 +50,16 @@
           {{#each books}}
             <tr>
               <td><code>{{this.productCode}}</code></td>
-              <td>{{this.name}}</td>
+              <td>{{this.title}}</td>
               <td>{{this.author}}</td>
               <td>{{this.price}} VNĐ</td>
+              <td>{{this.vatRate}}%</td>
               <td><strong>{{this.priceAfterTax}} VNĐ</strong></td>
             </tr>
           {{/each}}
         {{else}}
           <tr>
-            <td colspan="5" class="empty-state">
+            <td colspan="6" class="empty-state">
               Chưa có dữ liệu sách trong cơ sở dữ liệu.
             </td>
           </tr>

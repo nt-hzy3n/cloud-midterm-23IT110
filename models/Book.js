@@ -7,7 +7,7 @@ const bookSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  name: {
+  title: {
     type: String,
     required: true,
     trim: true
@@ -22,13 +22,34 @@ const bookSchema = new mongoose.Schema({
     required: true,
     min: 0
   },
+  vatRate: {
+    type: Number,
+    required: true,
+    default: 5
+  },
   priceAfterTax: {
     type: Number,
     required: true,
     min: 0
   }
 }, {
-  timestamps: true
+  timestamps: { createdAt: true, updatedAt: false },
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-module.exports = bookSchema;
+// Helper to compile/retrieve Book model bound to a specific connection
+function getBookModel(connection) {
+  if (!connection) {
+    throw new Error('Database connection is not initialized');
+  }
+  if (connection.models && connection.models['Book']) {
+    return connection.models['Book'];
+  }
+  return connection.model('Book', bookSchema);
+}
+
+module.exports = {
+  bookSchema,
+  getBookModel
+};
