@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{pageTitle}} - 23IT110</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-inner">
+        <h1>Book Management System</h1>
+        <div class="badge">Cloud Computing Midterm</div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      {{{body}}}
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p><strong>Họ tên:</strong> {{fullName}}</p>
+        <p><strong>MSSV:</strong> {{mssv}}</p>
+        <p><strong>VAT áp dụng:</strong> {{vatRate}}%</p>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

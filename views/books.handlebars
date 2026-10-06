@@ -1,0 +1,68 @@
+<section class="card form-card">
+  <h2>Thêm sách mới</h2>
+  <p class="subtitle">Tiền tố mã sản phẩm bắt buộc: <strong>110</strong> (3 số cuối MSSV)</p>
+  
+  <form action="/books/add" method="POST" class="book-form">
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="productCode">Mã sản phẩm</label>
+        <input type="text" id="productCode" name="productCode" placeholder="Ví dụ: 11001" required>
+      </div>
+
+      <div class="form-group">
+        <label for="name">Tên sách</label>
+        <input type="text" id="name" name="name" placeholder="Tên cuốn sách" required>
+      </div>
+
+      <div class="form-group">
+        <label for="author">Tác giả</label>
+        <input type="text" id="author" name="author" placeholder="Tên tác giả" required>
+      </div>
+
+      <div class="form-group">
+        <label for="price">Giá sách (VNĐ)</label>
+        <input type="number" id="price" name="price" placeholder="Giá gốc" min="0" required>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Thêm sách</button>
+    </div>
+  </form>
+</section>
+
+<section class="card table-card">
+  <h2>Danh sách sách</h2>
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Mã sách</th>
+          <th>Tên sách</th>
+          <th>Tác giả</th>
+          <th>Giá gốc</th>
+          <th>Giá sau thuế (VAT {{vatRate}}%)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if books.length}}
+          {{#each books}}
+            <tr>
+              <td><code>{{this.productCode}}</code></td>
+              <td>{{this.name}}</td>
+              <td>{{this.author}}</td>
+              <td>{{this.price}} VNĐ</td>
+              <td><strong>{{this.priceAfterTax}} VNĐ</strong></td>
+            </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td colspan="5" class="empty-state">
+              Chưa có dữ liệu sách trong cơ sở dữ liệu.
+            </td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+  </div>
+</section>
