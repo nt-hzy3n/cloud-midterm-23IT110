@@ -8,7 +8,7 @@
 - Node.js
 - Express
 - MongoDB Atlas
-- Mongoose
+- MongoDB Node.js Driver (MongoClient)
 - Handlebars
 - Git
 - Render

@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const { engine } = require('express-handlebars');
+const { connectDatabase } = require('./config/database');
 const bookRoutes = require('./routes/bookRoutes');
 
 const app = express();
@@ -26,10 +27,17 @@ app.use('/books', bookRoutes);
 // Server start
 if (require.main === module) {
   const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Student: ${process.env.FULL_NAME || 'Nguyen Thi Huyen'} - MSSV: ${process.env.MSSV || '23IT110'}`);
-  });
+  connectDatabase()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Student: ${process.env.FULL_NAME || 'Nguyen Thi Huyen'} - MSSV: ${process.env.MSSV || '23IT110'}`);
+      });
+    })
+    .catch((err) => {
+      console.error('Database connection failed:', err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = app;
