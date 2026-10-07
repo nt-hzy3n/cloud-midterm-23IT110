@@ -66,6 +66,29 @@ body {
   gap: 24px;
 }
 
+.alert {
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow);
+}
+
+.alert-success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alert-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
 .card {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);

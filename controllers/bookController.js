@@ -1,22 +1,26 @@
 // controllers/bookController.js
-const { getReadConnection, getWriteConnection } = require('../config/database');
-const { getBookModel } = require('../models/Book');
+const { getReadDb, getWriteDb } = require('../config/database');
+const { validateBookInput, createBookDocument } = require('../models/Book');
 
 // GET /books - Uses READ connection only
 async function getBooks(req, res) {
   try {
     const fullName = process.env.FULL_NAME || 'Nguyen Thi Huyen';
     const mssv = process.env.MSSV || '23IT110';
-    const vatRate = Number(process.env.VAT_RATE) || (Number(mssv.slice(-1)) + 5);
+    const vatRate = process.env.VAT_RATE !== undefined ? Number(process.env.VAT_RATE) : (Number(mssv.slice(-1)) + 4);
 
     // Explicitly query through READ connection
-    const readConnection = getReadConnection();
-    if (!readConnection) {
+    const readDb = getReadDb();
+    if (!readDb) {
       throw new Error('READ database connection is not ready');
     }
 
-    const BookRead = getBookModel(readConnection);
-    const books = await BookRead.find().sort({ createdAt: -1 }).lean();
+    // Native MongoDB collection find and toArray()
+    const books = await readDb
+      .collection('books')
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
 
     res.render('books', {
       pageTitle: 'Book Management System',
@@ -36,42 +40,38 @@ async function getBooks(req, res) {
 // POST /books - Uses WRITE connection only
 async function addBook(req, res) {
   try {
-    const { productCode, title, name, author, price } = req.body;
-    const bookTitle = title || name;
-
     const mssv = process.env.MSSV || '23IT110';
     const prefix = process.env.PRODUCT_PREFIX || mssv.slice(-3); // '110'
-    const vatRate = Number(process.env.VAT_RATE) || (Number(mssv.slice(-1)) + 5); // 5%
+    const vatRate = process.env.VAT_RATE !== undefined ? Number(process.env.VAT_RATE) : (Number(mssv.slice(-1)) + 4); // 4%
 
-    // 1. Validate Product Code prefix server-side
-    if (!productCode || !productCode.startsWith(prefix)) {
-      return res.status(400).send(`Mã sản phẩm phải bắt đầu bằng 3 số cuối MSSV (${prefix})`);
+    // 1. Validation using helper
+    const validation = validateBookInput(req.body, prefix);
+    if (!validation.valid) {
+      if (req.xhr || req.headers['content-type']?.includes('application/json')) {
+        return res.status(400).send(validation.error);
+      }
+      return res.redirect('/books?error=' + encodeURIComponent(validation.error));
     }
 
-    // 2. Validate book information
-    const numericPrice = Number(price);
-    if (!bookTitle || !author || !Number.isFinite(numericPrice) || numericPrice <= 0) {
-      return res.status(400).send('Thông tin sách không hợp lệ');
-    }
+    const { productCode, title, author, price } = validation.data;
 
-    // 3. Dynamic VAT calculation server-side
-    const priceAfterTax = Math.round(numericPrice * (1 + vatRate / 100));
+    // 2. Format book document with VAT calculation
+    const bookDocument = createBookDocument({
+      productCode,
+      title,
+      author,
+      price,
+      vatRate
+    });
 
-    // 4. Explicitly insert through WRITE connection
-    const writeConnection = getWriteConnection();
-    if (!writeConnection) {
+    // 3. Explicitly insert through WRITE connection only
+    const writeDb = getWriteDb();
+    if (!writeDb) {
       throw new Error('WRITE database connection is not ready');
     }
 
-    const BookWrite = getBookModel(writeConnection);
-    const savedBook = await BookWrite.create({
-      productCode,
-      title: bookTitle,
-      author,
-      price: numericPrice,
-      vatRate,
-      priceAfterTax
-    });
+    const result = await writeDb.collection('books').insertOne(bookDocument);
+    const savedBook = { ...bookDocument, _id: result.insertedId, id: result.insertedId.toString() };
 
     // Check if client expects JSON (e.g., API test) or standard HTML form submit
     if (req.xhr || req.headers['content-type']?.includes('application/json')) {
@@ -81,7 +81,7 @@ async function addBook(req, res) {
       });
     }
 
-    return res.redirect('/books');
+    return res.redirect('/books?success=' + encodeURIComponent('Thêm sách thành công'));
   } catch (error) {
     console.error('[BookController Error - Write]:', error.message);
     res.status(500).send('Không thể thêm sách: ' + error.message);

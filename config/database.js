@@ -1,8 +1,10 @@
 // config/database.js
-const mongoose = require('mongoose');
+const { MongoClient } = require('mongodb');
 
-let readDB = null;
-let writeDB = null;
+let readClient = null;
+let writeClient = null;
+let readDb = null;
+let writeDb = null;
 
 async function connectDatabase() {
   const dbName = process.env.DB_NAME || 'DB_23IT110';
@@ -13,52 +15,63 @@ async function connectDatabase() {
     throw new Error('Missing MONGODB_READ_URI or MONGODB_WRITE_URI in environment variables');
   }
 
-  // Independent READ connection
-  readDB = mongoose.createConnection(readURI, {
-    dbName: dbName
-  });
+  try {
+    // 1. Independent READ client
+    readClient = new MongoClient(readURI);
+    await readClient.connect();
+    readDb = readClient.db(dbName);
+    console.log(`[Read Connection] READ database connected: ${dbName}`);
 
-  readDB.on('connected', () => {
-    console.log(`[Read Connection] Connected successfully to database: ${dbName}`);
-  });
+    // 2. Independent WRITE client
+    writeClient = new MongoClient(writeURI);
+    await writeClient.connect();
+    writeDb = writeClient.db(dbName);
+    console.log(`[Write Connection] WRITE database connected: ${dbName}`);
 
-  readDB.on('error', (err) => {
-    console.error('[Read Connection] Error connecting to database:', err.message);
-  });
-
-  // Independent WRITE connection
-  writeDB = mongoose.createConnection(writeURI, {
-    dbName: dbName
-  });
-
-  writeDB.on('connected', () => {
-    console.log(`[Write Connection] Connected successfully to database: ${dbName}`);
-  });
-
-  writeDB.on('error', (err) => {
-    console.error('[Write Connection] Error connecting to database:', err.message);
-  });
-
-  await Promise.all([
-    readDB.asPromise(),
-    writeDB.asPromise()
-  ]);
-
-  return { readDB, writeDB };
+    return { readClient, writeClient, readDb, writeDb };
+  } catch (error) {
+    console.error('[Database Connection Error]:', error.message);
+    throw error;
+  }
 }
 
-function getReadConnection() {
-  return readDB;
+function getReadDb() {
+  return readDb;
 }
 
-function getWriteConnection() {
-  return writeDB;
+function getWriteDb() {
+  return writeDb;
+}
+
+function getReadClient() {
+  return readClient;
+}
+
+function getWriteClient() {
+  return writeClient;
+}
+
+async function closeDatabase() {
+  if (readClient) {
+    await readClient.close();
+    readClient = null;
+    readDb = null;
+  }
+  if (writeClient) {
+    await writeClient.close();
+    writeClient = null;
+    writeDb = null;
+  }
 }
 
 module.exports = {
   connectDatabase,
-  getReadConnection,
-  getWriteConnection,
-  getReadDB: getReadConnection,
-  getWriteDB: getWriteConnection
+  getReadDb,
+  getWriteDb,
+  getReadClient,
+  getWriteClient,
+  closeDatabase,
+  // Compatibility aliases
+  getReadConnection: getReadDb,
+  getWriteConnection: getWriteDb
 };
